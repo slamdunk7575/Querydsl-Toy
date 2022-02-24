@@ -1,9 +1,10 @@
 package me.study.querydsl;
 
 import com.querydsl.core.QueryResults;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import me.study.querydsl.entity.Member;
-import me.study.querydsl.entity.QMember;
+import me.study.querydsl.entity.QTeam;
 import me.study.querydsl.entity.Team;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +18,7 @@ import javax.persistence.EntityManager;
 import java.util.List;
 
 import static me.study.querydsl.entity.QMember.member;
+import static me.study.querydsl.entity.QTeam.team;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -160,5 +162,71 @@ public class QuerydslBasicTest {
         assertThat(memberNull.getUsername()).isNull();
     }
 
+    @DisplayName("페이징 처리")
+    @Test
+    void paging1() {
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .orderBy(member.username.desc())
+                .offset(1) // skip 갯수
+                .limit(2)
+                .fetch();
 
+        assertThat(result.size()).isEqualTo(2);
+    }
+
+    @DisplayName("페이징 처리 (+ 전체 count)")
+    @Test
+    void paging2() {
+        QueryResults<Member> results = queryFactory
+                .selectFrom(member)
+                .orderBy(member.username.desc())
+                .offset(1) // skip 갯수
+                .limit(2)
+                .fetchResults();
+
+        assertThat(results.getTotal()).isEqualTo(4);
+        assertThat(results.getLimit()).isEqualTo(2);
+        assertThat(results.getOffset()).isEqualTo(1);
+        assertThat(results.getResults().size()).isEqualTo(2);
+    }
+
+    @DisplayName("집합")
+    @Test
+    void aggregation() {
+        List<Tuple> result = queryFactory.select(member.count(),
+                        member.age.sum(),
+                        member.age.avg(),
+                        member.age.max(),
+                        member.age.min()
+                ).from(member)
+                .fetch();
+
+        Tuple tuple = result.get(0);
+        assertThat(tuple.get(member.count())).isEqualTo(4);
+        assertThat(tuple.get(member.age.sum())).isEqualTo(100);
+        assertThat(tuple.get(member.age.avg())).isEqualTo(25);
+        assertThat(tuple.get(member.age.max())).isEqualTo(40);
+        assertThat(tuple.get(member.age.min())).isEqualTo(10);
+    }
+
+    @DisplayName("팀 이름과 각 팀의 평균 연령")
+    @Test
+    void group() {
+        List<Tuple> result = queryFactory
+                .select(team.name, member.age.avg())
+                .from(member)
+                .join(member.team, team)
+                .groupBy(team.name)
+                .fetch();
+
+        Tuple teamA = result.get(0);
+        Tuple teamB = result.get(1);
+
+        assertThat(teamA.get(team.name)).isEqualTo("TeamA");
+        assertThat(teamA.get(member.age.avg())).isEqualTo(15);
+
+        assertThat(teamB.get(team.name)).isEqualTo("TeamB");
+        assertThat(teamB.get(member.age.avg())).isEqualTo(35);
+    }
 }
