@@ -2,10 +2,14 @@ package me.study.querydsl;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import me.study.querydsl.dto.MemberDto;
+import me.study.querydsl.dto.UserDto;
 import me.study.querydsl.entity.Member;
 import me.study.querydsl.entity.QMember;
 import me.study.querydsl.entity.Team;
@@ -511,6 +515,81 @@ public class QuerydslBasicTest {
             Integer age = tuple.get(member.age);
             System.out.println("username: " + userName);
             System.out.println("age: " + age);
+        }
+    }
+
+    @DisplayName("JPQL 이용한 DTO 조회")
+    @Test
+    void findDtoByJPQL() {
+        List<MemberDto> result = em.createQuery("select new me.study.querydsl.dto.MemberDto(m.username, m.age) from Member m", MemberDto.class)
+                .getResultList();
+
+        for (MemberDto memberDto: result) {
+            System.out.println("MemberDto: " + memberDto);
+        }
+    }
+
+    @DisplayName("QueryDsl 이용한 DTO 조회 - 프로퍼티 접근(setter)")
+    @Test
+    void findDtoBySetter() {
+        List<MemberDto> result = queryFactory
+                .select(Projections.bean(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto memberDto : result) {
+            System.out.println("MemberDto: " + memberDto);
+        }
+    }
+
+    @DisplayName("QueryDsl 이용한 DTO 조회 - 필드 접근")
+    @Test
+    void findDtoByFields() {
+        List<MemberDto> result = queryFactory
+                .select(Projections.fields(MemberDto.class,
+                        member.username,
+                        member.age))
+                .from(member)
+                .fetch();
+
+        for (MemberDto memberDto : result) {
+            System.out.println("MemberDto: " + memberDto);
+        }
+    }
+
+    @DisplayName("QueryDsl 이용한 UserDto 조회 - 필드 접근")
+    @Test
+    void findUserDto() {
+        QMember subMember = new QMember("subMember");
+        List<UserDto> result = queryFactory
+                .select(Projections.fields(UserDto.class,
+                        member.username.as("name"),
+                        ExpressionUtils.as(JPAExpressions.select(subMember.age.max())
+                                .from(subMember), "age")
+                ))
+                .from(member)
+                .fetch();
+
+        for (UserDto userDto : result) {
+            System.out.println("UserDto: " + userDto);
+        }
+    }
+
+    @DisplayName("QueryDsl 이용한 DTO 조회 - 생성자 접근")
+    @Test
+    void findDtoByConstructor() {
+        List<MemberDto> result = queryFactory
+                .select(Projections.constructor(MemberDto.class,
+                        member.username,
+                        member.age,
+                        member.id))
+                .from(member)
+                .fetch();
+
+        for (MemberDto memberDto : result) {
+            System.out.println("MemberDto: " + memberDto);
         }
     }
 }
