@@ -56,6 +56,9 @@ public class QuerydslBasicTest {
         em.persist(member4);
     }
 
+    /**
+     * 섹션 0 ~ 3
+     */
     @DisplayName("JPQL Member 조회")
     @Test
     void startJPQL() {
@@ -475,6 +478,23 @@ public class QuerydslBasicTest {
 
         for (String s : result) {
             System.out.println("s = " + s);
+        }
+    }
+
+
+    /**
+     * 섹션 3 ~
+     */
+    @DisplayName("심플 프로젝션 반환")
+    @Test
+    void simpleProjection() {
+        List<String> results = queryFactory
+                .select(member.username)
+                .from(member)
+                .fetch();
+
+        for (String result : results) {
+            System.out.println("result: " + result);
         }
     }
 
