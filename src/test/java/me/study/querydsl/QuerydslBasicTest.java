@@ -498,4 +498,19 @@ public class QuerydslBasicTest {
         }
     }
 
+    @DisplayName("튜플 프로젝션 반환")
+    @Test
+    void tupleProjection() {
+        List<Tuple> result = queryFactory
+                .select(member.username, member.age)
+                .from(member)
+                .fetch();
+
+        for (Tuple tuple : result) {
+            String userName = tuple.get(member.username);
+            Integer age = tuple.get(member.age);
+            System.out.println("username: " + userName);
+            System.out.println("age: " + age);
+        }
+    }
 }
