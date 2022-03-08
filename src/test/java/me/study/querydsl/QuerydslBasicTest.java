@@ -673,4 +673,6 @@ public class QuerydslBasicTest {
         return userNameEq(userNameCond).and(ageEq(ageCond));
     }
 
+
+
 }
