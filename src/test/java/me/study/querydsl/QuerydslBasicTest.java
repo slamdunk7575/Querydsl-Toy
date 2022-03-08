@@ -22,6 +22,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
@@ -673,6 +674,58 @@ public class QuerydslBasicTest {
         return userNameEq(userNameCond).and(ageEq(ageCond));
     }
 
+    @DisplayName("벌크 업데이트")
+    @Test
+    void bulkUpdate() {
 
+        // 영속성 컨텍스트 무시하고 바로 DB 수정
+        long count = queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(28))
+                .execute();
 
+        em.flush();
+        em.clear();
+
+        // 영속성 컨텍스트         DB
+        // (1) Member1 = 10 -> (1) 비회원 = 10
+        // (2) Member2 = 20 -> (2) 비회원 = 20
+        // (3) Member3 = 30 -> (3) Member3 = 30
+        // (4) Member4 = 40 -> (4) Member4 = 40
+
+        // 영속성 컨텍스트 조회 (DB에서 데이터 버림 -> 불일치 발생)
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        for (Member member : result) {
+            System.out.println("member: " + member);
+        }
+    }
+
+    @DisplayName("벌크 덧셈, 뺄셈, 곱셈")
+    @Test
+    void bulkAdd() {
+        long addCount = queryFactory.update(member)
+                .set(member.age, member.age.add(1))
+                .execute();
+
+        long minusCount = queryFactory.update(member)
+                .set(member.age, member.age.add(-1))
+                .execute();
+
+        long multiplyCount = queryFactory.update(member)
+                .set(member.age, member.age.multiply(2))
+                .execute();
+    }
+
+    @DisplayName("벌크 삭제")
+    @Test
+    void bulkDelete() {
+        long count = queryFactory
+                .delete(member)
+                .where(member.age.gt(18))
+                .execute();
+    }
 }
