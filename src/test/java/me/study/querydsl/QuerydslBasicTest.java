@@ -34,6 +34,7 @@ import java.util.List;
 
 import static me.study.querydsl.entity.QMember.member;
 import static me.study.querydsl.entity.QTeam.team;
+import static org.assertj.core.api.Assertions.anyOf;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -727,5 +728,39 @@ public class QuerydslBasicTest {
                 .delete(member)
                 .where(member.age.gt(18))
                 .execute();
+    }
+
+    @DisplayName("SQL function 호출하기")
+    @Test
+    void sqlFunction() {
+        List<String> result = queryFactory
+                .select(Expressions.stringTemplate(
+                        "function('replace', {0}, {1}, {2})",
+                        member.username, "Member", "M"
+                )).from(member)
+                .fetch();
+
+        for (String name : result) {
+            System.out.println("result= " + name);
+        }
+    }
+
+    @DisplayName("QueryDsl 에서 SQL function 지원")
+    @Test
+    void sqlFunctionQueryDsl() {
+        List<String> result = queryFactory
+                .select(member.username)
+                .from(member)
+                /*.where(member.username.eq(
+                        Expressions.stringTemplate(
+                                "function('lower', {0})",
+                                member.username))*/
+                .where(member.username.eq(member.username.lower()))
+                .fetch();
+
+
+        for (String name : result) {
+            System.out.println("result= " + name);
+        }
     }
 }
