@@ -26,10 +26,9 @@ public class MemberJpaRepository {
     private final EntityManager em;
     private final JPAQueryFactory jpaQueryFactory;
 
-    public MemberJpaRepository(EntityManager em, JPAQueryFactory jpaQueryFactory) {
+    public MemberJpaRepository(EntityManager em) {
         this.em = em;
-        this.jpaQueryFactory = jpaQueryFactory;
-        // this.jpaQueryFactory = new JPAQueryFactory(em);
+        this.jpaQueryFactory = new JPAQueryFactory(em);
     }
 
     public void save(Member member) {
