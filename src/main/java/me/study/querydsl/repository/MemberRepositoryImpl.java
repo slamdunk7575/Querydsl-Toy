@@ -9,6 +9,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import me.study.querydsl.dto.MemberSearchCondition;
 import me.study.querydsl.dto.MemberTeamDto;
 import me.study.querydsl.dto.QMemberTeamDto;
+import me.study.querydsl.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -99,8 +100,8 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        JPAQuery<Long> countQuery = jpaQueryFactory
-                .select(member.count())
+        JPAQuery<Member> countQuery = jpaQueryFactory
+                .select(member)
                 .from(member)
                 .leftJoin(member.team, team)
                 .where(
@@ -110,7 +111,7 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom {
                         ageLoe(condition.getAgeLoe())
                 );
 
-        return PageableExecutionUtils.getPage(contents, pageable, countQuery::fetchOne);
+        return PageableExecutionUtils.getPage(contents, pageable, countQuery::fetchCount);
     }
 
     private BooleanExpression usernameEq(String username) {
