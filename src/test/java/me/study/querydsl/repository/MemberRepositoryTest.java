@@ -3,6 +3,7 @@ package me.study.querydsl.repository;
 import me.study.querydsl.dto.MemberSearchCondition;
 import me.study.querydsl.dto.MemberTeamDto;
 import me.study.querydsl.entity.Member;
+import me.study.querydsl.entity.QMember;
 import me.study.querydsl.entity.Team;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -97,4 +98,32 @@ public class MemberRepositoryTest {
         assertThat(result.getContent()).extracting("username")
                 .containsExactly("Member1", "Member2", "Member3");
     }
+
+    @Test
+    public void querydslPredicateExecutorTest() {
+        // given
+        Team teamA = new Team("TeamA");
+        Team teamB = new Team("TeamB");
+        em.persist(teamA);
+        em.persist(teamB);
+
+        Member member1 = new Member("Member1", 10, teamA);
+        Member member2 = new Member("Member2", 20, teamA);
+        Member member3 = new Member("Member3", 30, teamB);
+        Member member4 = new Member("Member4", 40, teamB);
+
+        em.persist(member1);
+        em.persist(member2);
+        em.persist(member3);
+        em.persist(member4);
+
+        QMember member = QMember.member;
+        Iterable<Member> result = memberRepository.findAll(member.age.between(10, 40)
+                .and(member.username.eq("Member1")));
+
+        for (Member findMember : result) {
+            System.out.println("Member1: " + result);
+        }
+    }
+
 }
